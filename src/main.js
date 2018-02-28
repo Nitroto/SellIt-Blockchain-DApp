@@ -4,8 +4,10 @@ import Vue from 'vue'
 import App from './App'
 import Web3 from 'web3'
 import router from './router'
+import BootstrapVue from 'bootstrap-vue'
 
 Vue.config.productionTip = false
+Vue.use(BootstrapVue)
 
 window.addEventListener('load', function () {
   if (typeof web3 !== 'undefined') {

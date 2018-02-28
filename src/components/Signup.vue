@@ -5,7 +5,7 @@
       <div class="entry">
         <button @click="signup" name="signup">Sign up</button>
         <input name="pseudo" v-model="form.pseudo">
-        <label for="pseudo">Pseudo</label>
+        <label for="pseudo">Username:</label>
       </div>
     </div>
   </section>
@@ -46,29 +46,29 @@
 
   #signup {
     text-align: center;
-    
+
     .form {
       display: flex;
       flex-direction: column;
       margin: auto;
-      
+
       .entry {
         display: flex;
         flex-direction: row-reverse;
         justify-content: center;
-        
+
         label {
           margin-right: 20px
         }
-        
+
         button {
           margin-left: 20px
-        }  
-        
+        }
+
       }
-        
+
     }
-    
+
   }
 
 </style>
