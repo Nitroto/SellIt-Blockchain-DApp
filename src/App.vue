@@ -60,6 +60,16 @@
       }).catch(err => {
         console.log(err)
       })
+    },
+    methods: {
+      destroyAccount: function (e) {
+        e.preventDefault()
+        Users.destroy().then(() => {
+          this.pseudo = undefined
+        }).catch(err => {
+          console.log(err)
+        })
+      }
     }
   }
 </script>

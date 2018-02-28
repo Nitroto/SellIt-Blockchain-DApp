@@ -1,12 +1,20 @@
 <template>
   <section id='signup'>
     <h1>Sign up</h1>
-    <div class="form">
-      <div class="entry">
-        <button @click="signup" name="signup">Sign up</button>
-        <input name="pseudo" v-model="form.pseudo">
-        <label for="pseudo">Username:</label>
-      </div>
+    <div class="w-75 p-3 mb-1 center">
+      <b-form @submit="signup">
+        <b-form-group id="signup" label="Username">
+          <b-form-input id="username"
+                        type="text"
+                        v-model="form.pseudo"
+                        required
+                        placeholder="Enter your username">
+          </b-form-input>
+        </b-form-group>
+
+        <b-button type="submit" variant="outline-success">Sign Up</b-button>
+
+      </b-form>
     </div>
   </section>
 </template>
@@ -42,33 +50,8 @@
   }
 </script>
 
-<style lang="scss" scoped>
-
-  #signup {
-    text-align: center;
-
-    .form {
-      display: flex;
-      flex-direction: column;
-      margin: auto;
-
-      .entry {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: center;
-
-        label {
-          margin-right: 20px
-        }
-
-        button {
-          margin-left: 20px
-        }
-
-      }
-
-    }
-
+<style scoped>
+  .center {
+    margin: auto;
   }
-
 </style>
