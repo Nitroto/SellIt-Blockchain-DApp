@@ -40,7 +40,9 @@
         if (typeof this.form.pseudo !== 'undefined' && this.form.pseudo !== '') {
           Users.create(this.form.pseudo).then(tx => {
             console.log(tx)
-            self.$router.push('/')
+            self.$router.push('/').then(() => {
+              location.reload()
+            })
           }).catch(err => {
             console.log(err)
           })

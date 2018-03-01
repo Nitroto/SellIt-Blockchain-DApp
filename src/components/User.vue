@@ -6,10 +6,10 @@
   import Users from '@/js/users'
 
   export default {
-    name: "user",
+    name: 'user',
     methods: {
       destroyAccount: function (e) {
-        e.preventDefault();
+        e.preventDefault()
         Users.destroy().then(() => {
           this.pseudo = undefined
         }).catch(err => {
