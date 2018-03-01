@@ -22,6 +22,8 @@ contract SellItPayment is Owned {
   }
 
   mapping(uint => Offer) offers;
+  mapping(address => uint) balanceEthForAddress;
+  mapping(address => uint) pendingReturns;
 
   ////////////
   // EVENTS //
@@ -68,60 +70,66 @@ contract SellItPayment is Owned {
   // Accept existing offer from user which is not seller. Buyer make payment to system for the announced price.
   function AcceptOffer(uint offerIndex, string addressForShipment) public payable existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    require(msg.sender != offer.seller);
     // check if buyer is not the seller
-    require(offer.buyer == address(0));
+    require(msg.sender != offer.seller);
     // check if someone has already accepted the offer
-    require(offer.canceled == false);
+    require(offer.buyer == address(0));
     // check if offer is not already canceled
-    // Add payment to owner address affter confirmation of client owner should transfer amount to seller!
+    require(offer.canceled == false);
+    // check if the amount is not negative
+    require(balanceEthForAddress[msg.sender] + msg.value >= balanceEthForAddress[msg.sender]);
+    // check is the transferred amount equal to the price
+    require(msg.value == offer.price);
+    // transfer eth to payment
+    balanceEthForAddress[msg.sender] += msg.value;
     offer.buyer = msg.sender;
     offer.confirmed = false;
     offer.buyerAddress = addressForShipment;
     OfferAccepted(msg.sender, offerIndex);
   }
 
-  // Seller can cancel existing offer if this offer is not confirmed yet. System refund buyer.
+  // Seller can cancel existing offer if this offer is not confirmed yet. System allow buyer to withdraw the amount.
   function CancelOfferBySeller(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    require(msg.sender == offer.seller);
     // check if the seller is this who try to cancel offer
-    require(offer.confirmed == false);
+    require(msg.sender == offer.seller);
     // check if offer is not already confirmed
-    require(offer.canceled == false);
+    require(offer.confirmed == false);
     // check if offer is not already canceled
+    require(offer.canceled == false);
     offer.canceled = true;
-    // Refund buyer
+    RefundBuyer(offer.buyer, offer.price);
     OfferCanceledBySeller(msg.sender, offerIndex);
   }
 
   // Buyer can cancel accepted offer if is accepted by him and offer is not shipped or confirmed yet. System will refund buyer.
   function CancelOfferByBuyer(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    require(msg.sender == offer.buyer);
     // check if the buyer is this who try to cancel offer
-    require(offer.shipped == false);
+    require(msg.sender == offer.buyer);
     // check if offer is not already shipped
-    require(offer.confirmed == false);
+    require(offer.shipped == false);
     // check if offer is not already confirmed
-    require(offer.canceled == false);
+    require(offer.confirmed == false);
     // check if offer is not already canceled
+    require(offer.canceled == false);
     offer.canceled = true;
     // Refund buyer
     OfferCanceledByBuyer(msg.sender, offerIndex);
   }
 
   // Buyer confirm receiving of offered item or service and system make payment to seller.
-  function ConfirmOffer(uint offerIndex) public existing(offerIndex) {
+  function ConfirmOffer(uint offerIndex) public existing(offerIndex) payable {
     Offer storage offer = offers[offerIndex];
-    require(msg.sender == offer.buyer);
     // check whether the buyer wants to confirm
-    require(offer.confirmed == false);
+    require(msg.sender == offer.buyer);
     // check if offer is not already confirmed
-    require(offer.canceled == false);
+    require(offer.confirmed == false);
     // check if offer is not already canceled
-    offer.confirmed = true;
+    require(offer.canceled == false);
     // Execute instant payment to seller.
+    offer.confirmed = true;
+
     OfferConfirmed(msg.sender, offerIndex);
   }
 
@@ -130,12 +138,21 @@ contract SellItPayment is Owned {
     return (offer.title, offer.description, offer.confirmed, offer.canceled, offer.buyer);
   }
 
+  function GetBalanceByAddres(address addr) public view returns(uint) {
+    return balanceEthForAddress[addr];
+  }
+
+  //   function GetAddresByString(string addr) private view returns(address) {
+
+  //   }
+
 
   function RefundBuyer(address buyer, uint amount) private {
-
+    pendingReturns[buyer] += amount;
+    balanceEthForAddress[buyer] -= amount;
   }
 
-  function PayToSeller(uint amount) private {
+  //   function PayToSeller(uint amount) private {
 
-  }
+  //   }
 }
