@@ -15,7 +15,7 @@ contract SellItPayment is Owned {
     address buyer;
     string title;
     string description;
-    string buyerAddres;
+    string buyerAddress;
     bool shipped;
     bool confirmed;
     bool canceled;
@@ -36,12 +36,10 @@ contract SellItPayment is Owned {
   // MODIFERS //
   //////////////
   modifier existing(uint index) {
-    if (_offersCount > 0) {
-      _;
-    }
-    if (index <= _offersCount) {
-      _;
-    }
+    assert(_offersCount > 0);
+    assert(index > 0);
+    assert(index <= _offersCount);
+    _;
   }
 
   ////////////////////////
@@ -49,6 +47,10 @@ contract SellItPayment is Owned {
   ////////////////////////
   function SellItPayment() public {
     _offersCount = 0;
+  }
+
+  function GetTotalNumberOfOffers() public view returns (uint) {
+    return _offersCount;
   }
 
   // Anyone can create offer
@@ -67,12 +69,15 @@ contract SellItPayment is Owned {
   function AcceptOffer(uint offerIndex, string addressForShipment) public payable existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
     require(msg.sender != offer.seller);
+    // check if buyer is not the seller
     require(offer.buyer == address(0));
-    require(!offer.canceled);
+    // check if someone has already accepted the offer
+    require(offer.canceled == false);
+    // check if offer is not already canceled
     // Add payment to owner address affter confirmation of client owner should transfer amount to seller!
     offer.buyer = msg.sender;
     offer.confirmed = false;
-    offer.buyerAddres = addressForShipment;
+    offer.buyerAddress = addressForShipment;
     OfferAccepted(msg.sender, offerIndex);
   }
 
@@ -80,35 +85,57 @@ contract SellItPayment is Owned {
   function CancelOfferBySeller(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
     require(msg.sender == offer.seller);
-    require(!offer.confirmed);
-    require(!offer.canceled);
+    // check if the seller is this who try to cancel offer
+    require(offer.confirmed == false);
+    // check if offer is not already confirmed
+    require(offer.canceled == false);
+    // check if offer is not already canceled
     offer.canceled = true;
     // Refund buyer
     OfferCanceledBySeller(msg.sender, offerIndex);
   }
 
-  // Buyer can cancel accepted offer if is accepted by him and offer is not shipped yet. System will refund buyer.
+  // Buyer can cancel accepted offer if is accepted by him and offer is not shipped or confirmed yet. System will refund buyer.
   function CancelOfferByBuyer(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
     require(msg.sender == offer.buyer);
-    require(!offer.shipped);
-    require(!offer.canceled);
+    // check if the buyer is this who try to cancel offer
+    require(offer.shipped == false);
+    // check if offer is not already shipped
+    require(offer.confirmed == false);
+    // check if offer is not already confirmed
+    require(offer.canceled == false);
+    // check if offer is not already canceled
     offer.canceled = true;
     // Refund buyer
     OfferCanceledByBuyer(msg.sender, offerIndex);
   }
 
-  // Buyer confirm receiving of offered item or service and system make payment to seller
+  // Buyer confirm receiving of offered item or service and system make payment to seller.
   function ConfirmOffer(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
     require(msg.sender == offer.buyer);
-    require(!offer.confirmed);
+    // check whether the buyer wants to confirm
+    require(offer.confirmed == false);
+    // check if offer is not already confirmed
+    require(offer.canceled == false);
+    // check if offer is not already canceled
     offer.confirmed = true;
-    // Add payment to seller!
+    // Execute instant payment to seller.
     OfferConfirmed(msg.sender, offerIndex);
   }
 
-  //function GetOfferById(uint offerIndex) public view {
-  //
-  // }
+  function GetOfferById(uint offerIndex) public view existing(offerIndex) returns (string, string, bool, bool, address) {
+    Offer storage offer = offers[offerIndex];
+    return (offer.title, offer.description, offer.confirmed, offer.canceled, offer.buyer);
+  }
+
+
+  function RefundBuyer(address buyer, uint amount) private {
+
+  }
+
+  function PayToSeller(uint amount) private {
+
+  }
 }
