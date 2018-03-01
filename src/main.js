@@ -24,7 +24,7 @@ window.addEventListener('load', function () {
     el: '#app',
     router,
     template: '<App/>',
-    components: { App }
+    components: {App}
   })
 })
 

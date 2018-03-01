@@ -21,8 +21,8 @@
           </b-nav-form>
 
           <b-navbar-nav>
-            <b-nav-item v-if="userExists" :to="{ name: 'user'}">User</b-nav-item>
-            <b-nav-item v-else :to="{ name: 'signup'}">Sign Up</b-nav-item>
+            <b-nav-item v-if="userExists" :to="{ name: 'user' }">User</b-nav-item>
+            <b-nav-item v-else :to="{ name: 'signup' }">Sign Up</b-nav-item>
           </b-navbar-nav>
         </b-navbar-nav>
 
