@@ -8,9 +8,9 @@
 
       <b-collapse is-nav id="nav_collapse">
 
-        <b-navbar-nav v-if="userExists">
-          <b-nav-item href="#">Sell</b-nav-item>
-          <b-nav-item href="#">Buy</b-nav-item>
+        <b-navbar-nav>
+          <b-nav-item :to="{ name: 'sell' }">Sell</b-nav-item>
+          <b-nav-item :to="{ name: 'buy' }">Buy</b-nav-item>
         </b-navbar-nav>
 
         <!-- Right aligned nav items -->
@@ -38,7 +38,7 @@
 
       </b-collapse>
     </b-navbar>
-    <img src="./assets/logo.png">
+    <br>
     <router-view></router-view>
   </div>
 </template>

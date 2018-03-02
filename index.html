@@ -2,14 +2,19 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <link rel="shortcut icon" type="image/png" href="static/favicon.png"/>
+    <link rel="shortcut icon" href="<%= webpackConfig.output.publicPath %>favicon.png">
     <title>Sell it</title>
-    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
-    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
+    <script src="https://unpkg.com/vee-validate@2.0.0-rc.18/dist/vee-validate.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.4.0"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@deveodk/vue-toastr/dist/@deveodk/vue-toastr.min.css" />
   </head>
   <body>
     <div id="app"></div>
     <!-- built files will be auto injected -->
-    <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
-    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
   </body>
 </html>

@@ -9,7 +9,7 @@
     name: 'dashboard',
     data () {
       return {
-        msg: 'This is dApp Dashboard page',
+        msg: 'All offers should be listed here',
         pseudo: undefined
       }
     },

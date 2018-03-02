@@ -16,10 +16,14 @@
     "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
   },
   "dependencies": {
+    "@deveodk/vue-toastr": "^1.0.4",
     "bootstrap-vue": "^2.0.0-rc.1",
     "truffle-contract": "^3.0.0",
     "vue": "^2.4.2",
-    "vue-router": "^2.7.0"
+    "vue-resource": "^1.4.0",
+    "vue-router": "^2.7.0",
+    "vee-validate": "^2.0.4",
+    "vue2-filters": "^0.3.0"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

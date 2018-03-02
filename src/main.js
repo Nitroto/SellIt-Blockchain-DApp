@@ -4,10 +4,22 @@ import Vue from 'vue'
 import App from './App'
 import Web3 from 'web3'
 import router from './router'
+import VueResource from 'vue-resource'
+import VeeValidate from 'vee-validate'
+import VueToastr from '@deveodk/vue-toastr'
 import BootstrapVue from 'bootstrap-vue'
+import Vue2Filters from 'vue2-filters'
 
 Vue.config.productionTip = false
+Vue.use(VueResource)
+Vue.use(Vue2Filters)
 Vue.use(BootstrapVue)
+Vue.use(VueToastr, {
+  defaultPosition: 'toast-bottom-left',
+  defaultTimeout: 5000,
+  clickClose: true
+})
+Vue.use(VeeValidate)
 
 window.addEventListener('load', function () {
   if (typeof web3 !== 'undefined') {
