@@ -22,17 +22,22 @@ contract SellItPayment is Owned {
   }
 
   mapping(uint => Offer) offers;
-  mapping(address => uint) balanceEthForAddress;
-  mapping(address => uint) pendingReturns;
+  mapping(address => uint) blockedInContractEth;
+  mapping(address => uint) withdrawableFunds;
 
   ////////////
   // EVENTS //
   ////////////
+  event DepositReceived(address indexed _from, uint _amount, uint _timestamp);
+  event WithdrawalEth(address indexed _to, uint _amount, uint _timestamp);
   event OfferPublished(address indexed _seller, uint indexed _offerIndex);
   event OfferAccepted(address indexed _buyer, uint indexed _offerIndex);
   event OfferCanceledBySeller(address indexed _buyer, uint indexed _offerIndex);
   event OfferCanceledByBuyer(address indexed _buyer, uint indexed _offerIndex);
   event OfferConfirmed(address indexed _buyer, uint indexed _offerIndex);
+  event OfferShipped(address indexed _seller, uint indexed _offerIndex);
+  event TransactionConfirmed(address _from, address _to, uint _amount);
+
 
   //////////////
   // MODIFERS //
@@ -47,15 +52,28 @@ contract SellItPayment is Owned {
   ////////////////////////
   // MAIN FUNCTIONALITY //
   ////////////////////////
+  // Constructor. Init offers count with 0
   function SellItPayment() public {
     _offersCount = 0;
   }
 
-  function GetTotalNumberOfOffers() public view returns (uint) {
-    return _offersCount;
+  // Deposit some amount of eth
+  function Deposit() public payable {
+    require(withdrawableFunds[msg.sender] + msg.value >= withdrawableFunds[msg.sender]);
+    withdrawableFunds[msg.sender] += msg.value;
+    DepositReceived(msg.sender, msg.value, now);
   }
 
-  // Anyone can create offer
+  // Withraw not blocked funds
+  function Withraw(uint amount) public {
+    require(withdrawableFunds[msg.sender] - amount >= 0);
+    require(withdrawableFunds[msg.sender] - amount <= withdrawableFunds[msg.sender]);
+    withdrawableFunds[msg.sender] -= amount;
+    msg.sender.transfer(amount);
+    WithdrawalEth(msg.sender, amount, now);
+  }
+
+  // Everyone can create offer
   function PublishOffer(uint price, string title, string description) public {
     _offersCount += 1;
     Offer storage offer = offers[_offersCount];
@@ -67,7 +85,7 @@ contract SellItPayment is Owned {
     OfferPublished(msg.sender, _offersCount);
   }
 
-  // Accept existing offer from user which is not seller. Buyer make payment to system for the announced price.
+  // Accept existing offer from user which is not seller. Buyer make payment to system or take from his deposit for the announced price.
   function AcceptOffer(uint offerIndex, string addressForShipment) public payable existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
     // check if buyer is not the seller
@@ -77,11 +95,13 @@ contract SellItPayment is Owned {
     // check if offer is not already canceled
     require(offer.canceled == false);
     // check if the amount is not negative
-    require(balanceEthForAddress[msg.sender] + msg.value >= balanceEthForAddress[msg.sender]);
-    // check is the transferred amount equal to the price
-    require(msg.value == offer.price);
-    // transfer eth to payment
-    balanceEthForAddress[msg.sender] += msg.value;
+    require(withdrawableFunds[msg.sender] + msg.value >= withdrawableFunds[msg.sender]);
+    // check is the transferred amount equal or higher to the price
+    require(withdrawableFunds[msg.sender] + msg.value >= offer.price);
+    // transfer eth to blocked funds
+    blockedInContractEth[msg.sender] += offer.price;
+    // transferring excess eth to withdrawable ones
+    withdrawableFunds[msg.sender] += (msg.value - offer.price);
     offer.buyer = msg.sender;
     offer.confirmed = false;
     offer.buyerAddress = addressForShipment;
@@ -114,12 +134,12 @@ contract SellItPayment is Owned {
     // check if offer is not already canceled
     require(offer.canceled == false);
     offer.canceled = true;
-    // Refund buyer
+    RefundBuyer(offer.buyer, offer.price);
     OfferCanceledByBuyer(msg.sender, offerIndex);
   }
 
   // Buyer confirm receiving of offered item or service and system make payment to seller.
-  function ConfirmOffer(uint offerIndex) public existing(offerIndex) payable {
+  function ConfirmOffer(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
     // check whether the buyer wants to confirm
     require(msg.sender == offer.buyer);
@@ -127,32 +147,51 @@ contract SellItPayment is Owned {
     require(offer.confirmed == false);
     // check if offer is not already canceled
     require(offer.canceled == false);
-    // Execute instant payment to seller.
     offer.confirmed = true;
-
+    PayToSeller(offer.buyer, offer.seller, offer.price);
     OfferConfirmed(msg.sender, offerIndex);
   }
 
-  function GetOfferById(uint offerIndex) public view existing(offerIndex) returns (string, string, bool, bool, address) {
+  function ConfirmShipping(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
+    require(msg.sender == offer.seller);
+    require(offer.confirmed == false);
+    require(offer.canceled == false);
+    offer.shipped = true;
+    OfferShipped(msg.sender, offerIndex);
+  }
+
+  // Return offer info by offer id
+  function GetOfferById(uint offerId) public view existing(offerId) returns (string, string, bool, bool, address) {
+    Offer storage offer = offers[offerId];
     return (offer.title, offer.description, offer.confirmed, offer.canceled, offer.buyer);
   }
 
-  function GetBalanceByAddres(address addr) public view returns(uint) {
-    return balanceEthForAddress[addr];
+  // Helper function to check blocked balances
+  function GetBlockedBalanceByAddres(address addr) public view returns (uint) {
+    return blockedInContractEth[addr];
   }
 
-  //   function GetAddresByString(string addr) private view returns(address) {
+  // Helper function to check withdrawabl balances
+  function GetDepositBalanceByAddres(address addr) public view returns (uint) {
+    return withdrawableFunds[addr];
+  }
 
-  //   }
+  // Helper function to check offers total count
+  function GetTotalNumberOfOffers() public view returns (uint) {
+    return _offersCount;
+  }
 
-
+  // Unblock amount of eth for canceled order
   function RefundBuyer(address buyer, uint amount) private {
-    pendingReturns[buyer] += amount;
-    balanceEthForAddress[buyer] -= amount;
+    withdrawableFunds[buyer] += amount;
+    blockedInContractEth[buyer] -= amount;
   }
 
-  //   function PayToSeller(uint amount) private {
-
-  //   }
+  // Transfer amount of eth from buyer to seller
+  function PayToSeller(address from, address to, uint amount) private {
+    blockedInContractEth[from] -= amount;
+    withdrawableFunds[to] += amount;
+    TransactionConfirmed(from, to, amount);
+  }
 }
