@@ -1,14 +1,14 @@
 <template>
   <b-container>
-    <div><h3 class="float-left">Deposit balance: {{ deposit | currency('eth',0, {symbolOnLeft: false,
+    <!--<b-btn v-on:click="getDepositBalance" variant="info">Get balance</b-btn>-->
+    <div><h3 class="float-left">Deposit balance: {{ deposit | currency('eth',5, {symbolOnLeft: false,
       spaceBetweenAmountAndSymbol: true}) }} ({{ deposit * price | currency}})</h3></div>
     <div class="clearfix"></div>
-    <div><h3 class="float-left">Pending payments: {{ pending | currency('eth',0, {symbolOnLeft: false,
+    <div><h3 class="float-left">Pending payments: {{ pending | currency('eth',5, {symbolOnLeft: false,
       spaceBetweenAmountAndSymbol: true}) }} ({{ pending * price | currency}})</h3></div>
     <div class="clearfix"></div>
     <br>
     <b-row>
-
       <b-col>
         <div id="deposit">
           <b-input-group>
@@ -23,7 +23,8 @@
             </template>
           </b-input-group>
 
-          <p v-if="depositValue > 0">{{ convertToUSD(convertToEth(depositValue, unitDeposit)) | currency('$', 3) }}</p>
+          <p v-if="depositValue > 0">&asymp; {{ convertToUSD(convertToEth(depositValue, unitDeposit)) | currency('$', 3)
+            }}</p>
         </div>
       </b-col>
 
@@ -40,12 +41,22 @@
               <b-form-select class="btn btn-outline-info" v-model="unitWithdraw" :options="units"/>
             </template>
           </b-input-group>
-          <p v-if="withdrawValue > 0">{{ convertToUSD(convertToEth(withdrawValue, unitWithdraw)) | currency('$', 3)
-            }}</p>
+          <p v-if="withdrawValue > 0">
+            &asymp; {{ convertToUSD(convertToEth(withdrawValue, unitWithdraw)) | currency('$',3) }}
+          </p>
         </div>
       </b-col>
     </b-row>
     <br>
+
+    <b-row>
+      <b-col>
+        <p>Purchases</p>
+      </b-col>
+      <b-col>
+        <p>Sales</p>
+      </b-col>
+    </b-row>
     <p> TODO: All active offers for user sell or buy</p>
 
   </b-container>
@@ -53,6 +64,9 @@
 </template>
 
 <script>
+  import Payment from '@/js/payment'
+  import Converter from '@/js/converter'
+
   export default {
     name: 'user',
     data () {
@@ -67,57 +81,75 @@
         units: ['wei', 'gwei', 'finney', 'ether']
       }
     },
-    created () {
+    beforeCreate () {
       let url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=ETH&tsyms=USD'
       this.$http.get(url).then(response => {
         this.price = response.data.ETH.USD
       }, () => {
         this.$toastr('error', 'There is some connection problem.', 'Error')
       })
+      Payment.init().then(() => {
+        this.updateBalances()
+      }, err => {
+        console.log(err)
+      })
     },
     methods: {
-      makeDeposit: function () {
-        let amountInWei = this.convertToWei(this.depositValue, this.unitDeposit)
-        this.unitDeposit = this.units[0]
-        this.depositValue = 0
-        this.$toastr('success', amountInWei, 'Td')
-      },
-
-      withdraw: function () {
-        let amountInWei = this.convertToWei(this.depositValue, this.unitDeposit)
-        this.unitWithdraw = this.units[0]
-        this.withdrawValue = 0
-        this.$toastr('success', amountInWei, 'Zemi')
+      convertToUSD: function (amount) {
+        return Converter.toRealMoney(amount, this.price)
       },
 
       convertToEth: function (amount, unit) {
-        switch (unit) {
-          case 'wei':
-            return amount / 1000000000000000000
-          case 'gwei':
-            return amount / 1000000000
-          case 'finney':
-            return amount / 1000
-          default:
-            return amount
-        }
+        return Converter.toEth(amount, unit)
       },
 
-      convertToWei: function (amount, unit) {
-        switch (unit) {
-          case 'ether':
-            return amount * 1000000000000000000
-          case 'finney':
-            return amount * 1000000000000000
-          case 'gwei':
-            return amount * 1000000000
-          default:
-            return amount
-        }
+      makeDeposit: function () {
+        let amountInWei = Converter.toWei(this.depositValue, this.unitDeposit)
+        Payment.depositEther(amountInWei).then(() => {
+          this.$toastr('success', 'You successfully deposit ' + Converter.toEth(this.depositValue, this.unitDeposit) + ' eth.', 'Success')
+          this.unitDeposit = this.units[0]
+          this.depositValue = 0
+          this.updateBalances()
+        }, err => {
+          this.$toastr('error', 'There is some connection problem.', 'Error')
+          console.log(err)
+        })
       },
 
-      convertToUSD: function (amount) {
-        return amount * this.price
+      withdraw: function () {
+        let amountInWei = Converter.toWei(this.withdrawValue, this.unitWithdraw)
+        Payment.withdrawEther(amountInWei).then(() => {
+          this.$toastr('success', 'You successfully withdraw ' + Converter.toEth(this.withdrawValue, this.unitWithdraw) + ' eth.', 'Success')
+          this.unitWithdraw = this.units[0]
+          this.withdrawValue = 0
+          this.updateBalances()
+        }, err => {
+          this.$toastr('error', 'There is some connection problem.', 'Error')
+          console.log(err)
+        })
+      },
+
+      getDepositBalance: function () {
+        Payment.getDeposit().then(deposit => {
+          this.deposit = this.convertToEth(deposit.toNumber(), 'wei')
+        }, err => {
+          this.$toastr('error', 'There is some problem.', 'Error')
+          console.log(err)
+        })
+      },
+
+      getBlockedBalance: function () {
+        Payment.getPending().then(deposit => {
+          this.pending = this.convertToEth(deposit.toNumber(), 'wei')
+        }, err => {
+          this.$toastr('error', 'There is some problem.', 'Error')
+          console.log(err)
+        })
+      },
+
+      updateBalances: function () {
+        this.getDepositBalance()
+        this.getBlockedBalance()
       }
     }
   }

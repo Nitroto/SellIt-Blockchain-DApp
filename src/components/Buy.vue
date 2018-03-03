@@ -1,5 +1,5 @@
 <template>
-<h1>Buy</h1>
+  <h3>TODO: List all possible offers</h3>
 </template>
 
 <script>

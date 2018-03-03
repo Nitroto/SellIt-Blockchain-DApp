@@ -19,7 +19,7 @@ Vue.use(VueToastr, {
   defaultTimeout: 5000,
   clickClose: true
 })
-Vue.use(VeeValidate)
+Vue.use(VeeValidate, {locale: 'en'})
 
 window.addEventListener('load', function () {
   if (typeof web3 !== 'undefined') {

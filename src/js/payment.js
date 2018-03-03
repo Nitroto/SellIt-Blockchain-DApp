@@ -11,7 +11,6 @@ const Payment = {
     let self = this
 
     return new Promise(function (resolve, reject) {
-      // SellItPayment
       self.contract = contract(PaymentContract)
       self.contract.setProvider(window.web3.currentProvider)
       self.contract.deployed().then(instance => {
@@ -24,26 +23,69 @@ const Payment = {
   },
 
   listenToEvents: function () {
-    let self = this
+    // let self = this
 
     return new Promise((resolve, reject) => {
 
     })
   },
 
-  depositEther: function (amount) {
-
-  },
-
-  exists: function (address) {
+  depositEther: function (amountInWei) {
     let self = this
 
     return new Promise((resolve, reject) => {
-      self.instance.exists.call(
-        address || window.web3.eth.defaultAccount,
+      self.instance.Deposit(
+        {
+          value: amountInWei,
+          from: window.web3.eth.accounts[0]
+        }
+      ).then(tx => {
+        resolve(tx)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  withdrawEther: function (amountInWei) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.Withraw(
+        amountInWei,
         {from: window.web3.eth.accounts[0]}
-      ).then(exists => {
-        resolve(exists)
+      ).then(tx => {
+        resolve(tx)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  getDeposit: function (address) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetDepositBalanceByAddres.call(
+        address || window.web3.eth.accounts[0],
+        {from: window.web3.eth.accounts[0]}
+      ).then(balance => {
+        resolve(balance)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  getPending: function (address) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetBlockedBalanceByAddres.call(
+        address || window.web3.eth.accounts[0],
+        {from: window.web3.eth.accounts[0]}
+      ).then(balance => {
+        resolve(balance)
       }).catch(err => {
         reject(err)
       })

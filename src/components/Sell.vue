@@ -12,7 +12,7 @@
 
       <br/>
 
-      <b-input-group prepend="Price">
+      <b-input-group prepend="Price" :append="convertToUSD(convertToEth(form.price,unit)) | currency('$',2)">
         <b-form-input id="price"
                       type="number"
                       min="0"
@@ -40,10 +40,15 @@
       <b-button type="submit" variant="primary">Submit</b-button>
       <b-button type="reset" variant="danger">Reset</b-button>
     </b-form>
+
+    <br/>
   </div>
 </template>
 
 <script>
+  import Converter from '@/js/converter'
+  import Payment from '@/js/payment'
+
   export default {
     name: 'sell',
     data () {
@@ -51,16 +56,36 @@
         form: {
           title: '',
           description: '',
-          price: 0
+          price: 0,
+          rate: 0
         },
         unit: 'wei',
         units: ['wei', 'gwei', 'finney', 'ether']
       }
     },
+    beforeCreate () {
+      let url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=ETH&tsyms=USD'
+      this.$http.get(url).then(response => {
+        this.rate = response.data.ETH.USD
+      }, () => {
+        this.$toastr('error', 'There is some connection problem.', 'Error')
+      })
+
+      Payment.init()
+    },
     methods: {
+      convertToEth: function (amount, unit) {
+        return Converter.toEth(amount, unit)
+      },
+
+      convertToUSD: function (amount) {
+        return Converter.toRealMoney(amount, this.rate)
+      },
+
       onSubmit: function () {
         console.log('submited')
       },
+
       onReset: function () {
         this.$validator.reset()
       }

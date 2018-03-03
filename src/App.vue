@@ -24,15 +24,18 @@
           </b-nav-form>
 
           <b-navbar-nav>
-            <b-nav-item-dropdown v-if="userExists" right>
+            <b-nav-item-dropdown  right>
               <!-- Using button-content slot -->
               <template slot="button-content">
-                <em>{{ pseudo}}</em>
+                <em v-if="userExists">{{ pseudo}}</em>
+                <em v-else>User</em>
               </template>
               <b-dropdown-item :to="{ name: 'user' }">Profile</b-dropdown-item>
-              <b-dropdown-item @click="destroyAccount">Delete</b-dropdown-item>
+              <b-dropdown-item v-if="userExists" @click="destroyAccount">Delete</b-dropdown-item>
+              <b-dropdown-item v-else :to="{ name: 'signup' }">Sign Up</b-dropdown-item>
+
             </b-nav-item-dropdown>
-            <b-nav-item v-else :to="{ name: 'signup' }">Sign Up</b-nav-item>
+
           </b-navbar-nav>
         </b-navbar-nav>
 
