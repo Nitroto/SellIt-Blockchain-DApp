@@ -101,8 +101,113 @@ const Payment = {
         title,
         description,
         {from: window.web3.eth.accounts[0]}
+      ).then(offer => {
+        resolve(offer)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  getOfferById: function (id) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetOfferById.call(
+        id,
+        {from: window.web3.eth.accounts[0]}
+      ).then(tx => {
+        resolve(tx)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  acceptOffer: function (id, address) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.AcceptOffer(
+        id,
+        address,
+        {from: window.web3.eth.accounts[0]}
       ).then(balance => {
         resolve(balance)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  cancelOfferAsSeller: function (id) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.CancelOfferBySeller(
+        id,
+        {from: window.web3.eth.accounts[0]}
+      ).then(tx => {
+        resolve(tx)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  cancelOfferAsBuyer: function (id) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.CancelOfferByBuyer(
+        id,
+        {from: window.web3.eth.accounts[0]}
+      ).then(tx => {
+        resolve(tx)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  confirmOffer: function (id) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.ConfirmOffer(
+        id,
+        {from: window.web3.eth.accounts[0]}
+      ).then(tx => {
+        resolve(tx)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  confirmShipping: function (id) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.ConfirmShipping(
+        id,
+        {from: window.web3.eth.accounts[0]}
+      ).then(tx => {
+        resolve(tx)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  getNumberOfOffers: function () {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetTotalNumberOfOffers(
+        {from: window.web3.eth.accounts[0]}
+      ).then(count => {
+        resolve(count)
       }).catch(err => {
         reject(err)
       })

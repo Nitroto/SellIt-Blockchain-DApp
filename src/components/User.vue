@@ -1,6 +1,5 @@
 <template>
   <b-container>
-    <!--<b-btn v-on:click="getDepositBalance" variant="info">Get balance</b-btn>-->
     <div><h3 class="float-left">Deposit balance: {{ deposit | currency('eth',5, {symbolOnLeft: false,
       spaceBetweenAmountAndSymbol: true}) }} ({{ deposit * price | currency}})</h3></div>
     <div class="clearfix"></div>

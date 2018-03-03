@@ -42,6 +42,9 @@
     </b-form>
 
     <br/>
+
+    <b-btn v-on:click="getNumberOfOffers" variant="info">Get number</b-btn>
+    <p v-if="offersCount>0">{{offersCount}}</p>
   </div>
 </template>
 
@@ -60,7 +63,8 @@
         },
         rate: 0,
         unit: 'wei',
-        units: ['wei', 'gwei', 'finney', 'ether']
+        units: ['wei', 'gwei', 'finney', 'ether'],
+        offersCount: 0
       }
     },
     beforeCreate () {
@@ -92,7 +96,7 @@
             price: 0
           }
           console.log(tx)
-          this.$validator.clean()
+          this.$validator.reset()
         }, err => {
           console.log(err)
         })
@@ -100,6 +104,12 @@
 
       onReset: function () {
         this.$validator.reset()
+      },
+
+      getNumberOfOffers: function () {
+        Payment.getNumberOfOffers().then(count => {
+          this.offersCount = count.toNumber()
+        })
       }
     }
   }

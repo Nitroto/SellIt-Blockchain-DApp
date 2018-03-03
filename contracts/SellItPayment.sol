@@ -194,4 +194,25 @@ contract SellItPayment is Owned {
     withdrawableFunds[to] += amount;
     TransactionConfirmed(from, to, amount);
   }
+
+  // Serialization of main structure
+  function serializeOffer(uint offerId) private view returns (bytes data) {
+    Offer storage offer = offers[offerId];
+    uint _size = 4 + bytes(offer.title).length;
+    bytes memory _data = new bytes(_size);
+
+    uint counter = 0;
+    for (uint i = 0; i < 4; i++) {
+      data[counter] = byte(offerId >> (8 * i) & uint32(255));
+      counter++;
+    }
+
+    for (i = 0; i < bytes(offer.title).length; i++)
+    {
+      _data[counter] = bytes(offer.title)[i];
+      counter++;
+    }
+
+    return (_data);
+  }
 }
