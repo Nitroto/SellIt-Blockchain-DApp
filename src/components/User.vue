@@ -107,9 +107,9 @@
         let amountInWei = Converter.toWei(this.depositValue, this.unitDeposit)
         Payment.depositEther(amountInWei).then(() => {
           this.$toastr('success', 'You successfully deposit ' + Converter.toEth(this.depositValue, this.unitDeposit) + ' eth.', 'Success')
+          this.updateBalances()
           this.unitDeposit = this.units[0]
           this.depositValue = 0
-          this.updateBalances()
         }, err => {
           this.$toastr('error', 'There is some connection problem.', 'Error')
           console.log(err)
@@ -120,9 +120,9 @@
         let amountInWei = Converter.toWei(this.withdrawValue, this.unitWithdraw)
         Payment.withdrawEther(amountInWei).then(() => {
           this.$toastr('success', 'You successfully withdraw ' + Converter.toEth(this.withdrawValue, this.unitWithdraw) + ' eth.', 'Success')
+          this.updateBalances()
           this.unitWithdraw = this.units[0]
           this.withdrawValue = 0
-          this.updateBalances()
         }, err => {
           this.$toastr('error', 'There is some connection problem.', 'Error')
           console.log(err)

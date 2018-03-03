@@ -56,9 +56,9 @@
         form: {
           title: '',
           description: '',
-          price: 0,
-          rate: 0
+          price: 0
         },
+        rate: 0,
         unit: 'wei',
         units: ['wei', 'gwei', 'finney', 'ether']
       }
@@ -83,7 +83,19 @@
       },
 
       onSubmit: function () {
-        console.log('submited')
+        let priceInWei = Converter.toWei(this.form.price, this.unit)
+        Payment.postOffer(this.form.title, this.form.description, priceInWei).then(tx => {
+          this.$toastr('success', 'You have successfully published a new offer.', 'Success')
+          this.form = {
+            title: '',
+            description: '',
+            price: 0
+          }
+          console.log(tx)
+          this.$validator.clean()
+        }, err => {
+          console.log(err)
+        })
       },
 
       onReset: function () {

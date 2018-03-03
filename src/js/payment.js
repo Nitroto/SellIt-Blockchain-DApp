@@ -90,6 +90,23 @@ const Payment = {
         reject(err)
       })
     })
+  },
+
+  postOffer: function (title, description, price) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.PublishOffer(
+        price,
+        title,
+        description,
+        {from: window.web3.eth.accounts[0]}
+      ).then(balance => {
+        resolve(balance)
+      }).catch(err => {
+        reject(err)
+      })
+    })
   }
 }
 
