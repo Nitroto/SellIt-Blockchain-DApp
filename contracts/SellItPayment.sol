@@ -11,17 +11,20 @@ contract SellItPayment is Owned {
   ///////////////////////
   struct Offer {
     address seller;
-    uint price;
     address buyer;
     string title;
     string description;
-    string buyerAddress;
+    uint price;
+    string addressForShipment;
+    bool accepted;
     bool shipped;
     bool confirmed;
     bool canceled;
   }
 
   mapping(uint => Offer) offers;
+  mapping(address => uint[]) sellingOffersByAddr;
+  mapping(address => uint[]) buyingOffersByAddr;
   mapping(address => uint) blockedInContractEth;
   mapping(address => uint) withdrawableFunds;
 
@@ -46,6 +49,16 @@ contract SellItPayment is Owned {
     assert(_offersCount > 0);
     assert(index > 0);
     assert(index <= _offersCount);
+    _;
+  }
+
+  modifier isSeller(uint index) {
+    assert(msg.sender == offers[index].seller);
+    _;
+  }
+
+  modifier isBuyer(uint index) {
+    assert(msg.sender == offers[index].buyer);
     _;
   }
 
@@ -82,36 +95,34 @@ contract SellItPayment is Owned {
     offer.title = title;
     offer.description = description;
     offer.shipped = false;
+    sellingOffersByAddr[msg.sender].push(_offersCount);
     OfferPublished(msg.sender, _offersCount);
   }
 
   // Accept existing offer from user which is not seller. Buyer make payment to system or take from his deposit for the announced price.
-  function AcceptOffer(uint offerIndex, string addressForShipment) public payable existing(offerIndex) {
+  function AcceptOffer(uint offerIndex, string addressForShipment) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    // check if buyer is not the seller
     require(msg.sender != offer.seller);
     // check if someone has already accepted the offer
     require(offer.buyer == address(0));
     // check if offer is not already canceled
     require(offer.canceled == false);
-    // check if the amount is not negative
-    require(withdrawableFunds[msg.sender] + msg.value >= withdrawableFunds[msg.sender]);
     // check is the transferred amount equal or higher to the price
-    require(withdrawableFunds[msg.sender] + msg.value >= offer.price);
-    // transfer eth to blocked funds
+    require(withdrawableFunds[msg.sender]  >= offer.price);
+    // transfer eth from withdrawable to blocked funds
+    withdrawableFunds[msg.sender] -= offer.price;
     blockedInContractEth[msg.sender] += offer.price;
-    // transferring excess eth to withdrawable ones
-    withdrawableFunds[msg.sender] += (msg.value - offer.price);
     offer.buyer = msg.sender;
+    offer.accepted = true;
     offer.confirmed = false;
-    offer.buyerAddress = addressForShipment;
+    offer.addressForShipment = addressForShipment;
+    buyingOffersByAddr[msg.sender].push(offerIndex);
     OfferAccepted(msg.sender, offerIndex);
   }
 
   // Seller can cancel existing offer if this offer is not confirmed yet. System allow buyer to withdraw the amount.
   function CancelOfferBySeller(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    // check if the seller is this who try to cancel offer
     require(msg.sender == offer.seller);
     // check if offer is not already confirmed
     require(offer.confirmed == false);
@@ -125,7 +136,6 @@ contract SellItPayment is Owned {
   // Buyer can cancel accepted offer if is accepted by him and offer is not shipped or confirmed yet. System will refund buyer.
   function CancelOfferByBuyer(uint offerIndex) public existing(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    // check if the buyer is this who try to cancel offer
     require(msg.sender == offer.buyer);
     // check if offer is not already shipped
     require(offer.shipped == false);
@@ -139,10 +149,8 @@ contract SellItPayment is Owned {
   }
 
   // Buyer confirm receiving of offered item or service and system make payment to seller.
-  function ConfirmOffer(uint offerIndex) public existing(offerIndex) {
+  function ConfirmOffer(uint offerIndex) public existing(offerIndex) isBuyer(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    // check whether the buyer wants to confirm
-    require(msg.sender == offer.buyer);
     // check if offer is not already confirmed
     require(offer.confirmed == false);
     // check if offer is not already canceled
@@ -152,29 +160,51 @@ contract SellItPayment is Owned {
     OfferConfirmed(msg.sender, offerIndex);
   }
 
-  function ConfirmShipping(uint offerIndex) public existing(offerIndex) {
+  // Seller can confirm shippment
+  function ConfirmShipping(uint offerIndex) public existing(offerIndex) isSeller(offerIndex) {
     Offer storage offer = offers[offerIndex];
-    require(msg.sender == offer.seller);
     require(offer.confirmed == false);
     require(offer.canceled == false);
     offer.shipped = true;
     OfferShipped(msg.sender, offerIndex);
   }
 
+  // Only seller can get shipment address
+  function GetShipmentAddress(uint offerIndex) public view existing(offerIndex) isSeller(offerIndex) returns (string) {
+    return offers[offerIndex].addressForShipment;
+  }
+
+  // Only seller and buyer can see offer status
+  function GetOfferStatus(uint offerIndex) public view existing(offerIndex) returns (bool, bool, bool){
+    Offer storage offer = offers[offerIndex];
+    require(msg.sender == offer.seller || msg.sender == offer.buyer);
+    return (offer.shipped, offer.confirmed, offer.canceled);
+  }
+
   // Return offer info by offer id
-  function GetOfferById(uint offerId) public view existing(offerId) returns (string, string, bool, bool, address) {
-    Offer storage offer = offers[offerId];
-    return (offer.title, offer.description, offer.confirmed, offer.canceled, offer.buyer);
+  function GetOfferById(uint offerIndex) public view existing(offerIndex) returns (uint, string, string, uint, bool) {
+    Offer storage offer = offers[offerIndex];
+    return (offerIndex, offer.title, offer.description, offer.price, offer.accepted);
   }
 
-  // Helper function to check blocked balances
-  function GetBlockedBalanceByAddres(address addr) public view returns (uint) {
-    return blockedInContractEth[addr];
+  // Return selling offers of user
+  function GetSellingOffers() public view returns (uint[]) {
+    return sellingOffersByAddr[msg.sender];
   }
 
-  // Helper function to check withdrawabl balances
-  function GetDepositBalanceByAddres(address addr) public view returns (uint) {
-    return withdrawableFunds[addr];
+  // Return buying offers of user
+  function GetBuyingOffers() public view returns (uint[]) {
+    return buyingOffersByAddr[msg.sender];
+  }
+
+  // User can check blocked balances
+  function GetBlockedBalance() public view returns (uint) {
+    return blockedInContractEth[msg.sender];
+  }
+
+  // User can check withdrawabl balances
+  function GetDepositBalance() public view returns (uint) {
+    return withdrawableFunds[msg.sender];
   }
 
   // Helper function to check offers total count
@@ -196,14 +226,14 @@ contract SellItPayment is Owned {
   }
 
   // Serialization of main structure
-  function serializeOffer(uint offerId) private view returns (bytes data) {
-    Offer storage offer = offers[offerId];
+  function serializeOffer(uint offerIndex) private view returns (bytes data) {
+    Offer storage offer = offers[offerIndex];
     uint _size = 4 + bytes(offer.title).length;
     bytes memory _data = new bytes(_size);
 
     uint counter = 0;
     for (uint i = 0; i < 4; i++) {
-      data[counter] = byte(offerId >> (8 * i) & uint32(255));
+      data[counter] = byte(offerIndex >> (8 * i) & uint32(255));
       counter++;
     }
 

@@ -62,12 +62,11 @@ const Payment = {
     })
   },
 
-  getDeposit: function (address) {
+  getDeposit: function () {
     let self = this
 
     return new Promise((resolve, reject) => {
-      self.instance.GetDepositBalanceByAddres.call(
-        address || window.web3.eth.accounts[0],
+      self.instance.GetDepositBalance.call(
         {from: window.web3.eth.accounts[0]}
       ).then(balance => {
         resolve(balance)
@@ -77,12 +76,11 @@ const Payment = {
     })
   },
 
-  getPending: function (address) {
+  getPending: function () {
     let self = this
 
     return new Promise((resolve, reject) => {
-      self.instance.GetBlockedBalanceByAddres.call(
-        address || window.web3.eth.accounts[0],
+      self.instance.GetBlockedBalance.call(
         {from: window.web3.eth.accounts[0]}
       ).then(balance => {
         resolve(balance)
@@ -208,6 +206,34 @@ const Payment = {
         {from: window.web3.eth.accounts[0]}
       ).then(count => {
         resolve(count)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  getIndexesOfSellingOffers: function () {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetSellingOffers(
+        {from: window.web3.eth.accounts[0]}
+      ).then(indexes => {
+        resolve(indexes)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  getIndexesOfBuyingOffers: function () {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetBuyingOffers(
+        {from: window.web3.eth.accounts[0]}
+      ).then(indexes => {
+        resolve(indexes)
       }).catch(err => {
         reject(err)
       })

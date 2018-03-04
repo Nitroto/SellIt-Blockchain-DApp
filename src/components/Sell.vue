@@ -67,7 +67,7 @@
         offersCount: 0
       }
     },
-    beforeCreate () {
+    created () {
       let url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=ETH&tsyms=USD'
       this.$http.get(url).then(response => {
         this.rate = response.data.ETH.USD

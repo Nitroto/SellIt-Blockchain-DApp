@@ -1,10 +1,10 @@
 <template>
   <b-container>
     <div><h3 class="float-left">Deposit balance: {{ deposit | currency('eth',5, {symbolOnLeft: false,
-      spaceBetweenAmountAndSymbol: true}) }} ({{ deposit * price | currency}})</h3></div>
+      spaceBetweenAmountAndSymbol: true}) }} (&asymp; {{ deposit * price | currency}})</h3></div>
     <div class="clearfix"></div>
     <div><h3 class="float-left">Pending payments: {{ pending | currency('eth',5, {symbolOnLeft: false,
-      spaceBetweenAmountAndSymbol: true}) }} ({{ pending * price | currency}})</h3></div>
+      spaceBetweenAmountAndSymbol: true}) }} (&asymp; {{ pending * price | currency}})</h3></div>
     <div class="clearfix"></div>
     <br>
     <b-row>
@@ -51,9 +51,44 @@
     <b-row>
       <b-col>
         <p>Purchases</p>
+        <div v-for="(offer, index) in buying" :key="index">
+          <b-card border-variant="warning"
+                  :header="offer[1]"
+                  align="center">
+            <div class="card-text">
+              <p>
+                {{ offer[2] }}
+              </p>
+              <p><strong>Price:</strong> {{ offer[3] | currency('wei', 0, { symbolOnLeft: false,
+                spaceBetweenAmountAndSymbol: true }) }}</p>
+              <p>&asymp; {{ convertToUSD(convertToEth(offer[3],'wei')) | currency('$', 2) }}</p>
+            </div>
+            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="danger">Cancel</b-btn>
+            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="success">Confirm</b-btn>
+          </b-card>
+          <br/>
+        </div>
       </b-col>
       <b-col>
         <p>Sales</p>
+        <div v-for="(offer, index) in selling" :key="index">
+          <b-card border-variant="info"
+                  :header="offer[1]"
+                  align="center">
+            <div class="card-text">
+              <p>
+                {{ offer[2] }}
+              </p>
+              <p><strong>Price:</strong> {{ offer[3] | currency('wei', 0, { symbolOnLeft: false,
+                spaceBetweenAmountAndSymbol: true }) }}</p>
+              <p>&asymp; {{ convertToUSD(convertToEth(offer[3],'wei')) | currency('$', 2) }}</p>
+            </div>
+            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="danger">Cancel</b-btn>
+            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="info">Shipped</b-btn>
+          </b-card>
+          <br/>
+        </div>
+
       </b-col>
     </b-row>
     <p> TODO: All active offers for user sell or buy</p>
@@ -77,10 +112,12 @@
         unitWithdraw: 'wei',
         depositValue: 0,
         withdrawValue: 0,
-        units: ['wei', 'gwei', 'finney', 'ether']
+        units: ['wei', 'gwei', 'finney', 'ether'],
+        selling: [],
+        buying: []
       }
     },
-    beforeCreate () {
+    created () {
       let url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=ETH&tsyms=USD'
       this.$http.get(url).then(response => {
         this.price = response.data.ETH.USD
@@ -89,6 +126,8 @@
       })
       Payment.init().then(() => {
         this.updateBalances()
+        this.getSellingOffers()
+        this.getBuyingOffers()
       }, err => {
         console.log(err)
       })
@@ -149,6 +188,44 @@
       updateBalances: function () {
         this.getDepositBalance()
         this.getBlockedBalance()
+      },
+
+      getIndexesSellingOffers: function () {
+        return Payment.getIndexesOfSellingOffers()
+      },
+
+      getIndexeBuyingOffers: function () {
+        return Payment.getIndexesOfBuyingOffers()
+      },
+
+      getSellingOffers () {
+        let self = this
+        this.getIndexesSellingOffers().then(result => {
+          result.forEach(function (index) {
+            Payment.getOfferById(index.toNumber()).then(offer => {
+              self.selling.push(offer)
+            }, err => {
+              console.log(err)
+            })
+          })
+        }, err => {
+          console.log(err)
+        })
+      },
+
+      getBuyingOffers () {
+        let self = this
+        this.getIndexeBuyingOffers().then(result => {
+          result.forEach(function (index) {
+            Payment.getOfferById(index.toNumber()).then(offer => {
+              self.buying.push(offer)
+            }, err => {
+              console.log(err)
+            })
+          })
+        }, err => {
+          console.log(err)
+        })
       }
     }
   }
