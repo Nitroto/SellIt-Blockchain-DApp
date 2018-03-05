@@ -238,6 +238,36 @@ const Payment = {
         reject(err)
       })
     })
+  },
+
+  getOfferStatus: function (id) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetOfferStatus(
+        id,
+        {from: window.web3.eth.accounts[0]}
+      ).then(result => {
+        resolve(result)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+
+  getShipmentAddress: function (id) {
+    let self = this
+
+    return new Promise((resolve, reject) => {
+      self.instance.GetShipmentAddress(
+        id,
+        {from: window.web3.eth.accounts[0]}
+      ).then(address => {
+        resolve(address)
+      }).catch(err => {
+        reject(err)
+      })
+    })
   }
 }
 

@@ -1,51 +1,44 @@
 <template>
-  <div class="container">
-    <b-form @submit="onSubmit" @reset="onReset">
-      <b-input-group prepend="Title">
-        <b-form-input id="title"
-                      type="text"
-                      v-model="form.title"
-                      required
-                      placeholder="Enter title">
-        </b-form-input>
-      </b-input-group>
-
-      <br/>
-
-      <b-input-group prepend="Price" :append="convertToUSD(convertToEth(form.price,unit)) | currency('$',2)">
-        <b-form-input id="price"
-                      type="number"
-                      min="0"
-                      v-model="form.price"
-                      required
-                      placeholder="Enter price">
-        </b-form-input>
-        <b-input-group-append>
-          <b-form-select class="btn btn-outline-info" v-model="unit" :options="units"/>
-        </b-input-group-append>
-      </b-input-group>
-
-      <br/>
-
-      <b-input-group>
-        <b-form-textarea id="description"
-                         v-model="form.description"
-                         required
-                         placeholder="Enter description"
-                         :rows="3"
-                         :max-rows="6">
-        </b-form-textarea>
-      </b-input-group>
-      <br/>
-      <b-button type="submit" variant="primary">Submit</b-button>
-      <b-button type="reset" variant="danger">Reset</b-button>
-    </b-form>
-
-    <br/>
-
-    <b-btn v-on:click="getNumberOfOffers" variant="info">Get number</b-btn>
-    <p v-if="offersCount>0">{{offersCount}}</p>
-  </div>
+  <b-row align-h="center">
+    <b-col cols="6" align-self="center">
+      <b-form @submit="onSubmit" @reset="onReset">
+        <b-input-group prepend="Title">
+          <b-form-input id="title"
+                        type="text"
+                        v-model="form.title"
+                        required
+                        placeholder="Enter title">
+          </b-form-input>
+        </b-input-group>
+        <br/>
+        <b-input-group prepend="Price" :append="convertToUSD(convertToEth(form.price,unit)) | currency('$',2)">
+          <b-form-input id="price"
+                        type="number"
+                        min="0"
+                        v-model="form.price"
+                        required
+                        placeholder="Enter price">
+          </b-form-input>
+          <b-input-group-append>
+            <b-form-select class="btn btn-outline-info" v-model="unit" :options="units"/>
+          </b-input-group-append>
+        </b-input-group>
+        <br/>
+        <b-input-group>
+          <b-form-textarea id="description"
+                           v-model="form.description"
+                           required
+                           placeholder="Enter description"
+                           :rows="3"
+                           :max-rows="6">
+          </b-form-textarea>
+        </b-input-group>
+        <br/>
+        <b-button type="submit" variant="primary">Submit</b-button>
+        <b-button type="reset" variant="danger">Reset</b-button>
+      </b-form>
+    </b-col>
+  </b-row>
 </template>
 
 <script>
@@ -63,8 +56,7 @@
         },
         rate: 0,
         unit: 'wei',
-        units: ['wei', 'gwei', 'finney', 'ether'],
-        offersCount: 0
+        units: ['wei', 'gwei', 'finney', 'ether']
       }
     },
     created () {
@@ -95,8 +87,8 @@
             description: '',
             price: 0
           }
-          console.log(tx)
           this.$validator.reset()
+          this.$router.replace('/')
         }, err => {
           console.log(err)
         })

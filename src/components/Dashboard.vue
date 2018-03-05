@@ -13,7 +13,9 @@
               spaceBetweenAmountAndSymbol: true }) }}</p>
             <p>&asymp; {{ convertToUSD(convertToEth(offer[3],'wei')) | currency('$', 2) }}</p>
           </div>
-          <b-btn v-if="!offer[4]" v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="info">Buy now</b-btn>
+          <b-btn v-if="!offer[4] && !sellingOffers.includes(offer[0].toNumber())" v-b-modal.confirmModal
+                 @click="id = offer[0].toNumber()" block variant="info">Buy now
+          </b-btn>
         </b-card>
         <br/>
       </b-col>
@@ -30,10 +32,10 @@
     name: 'dashboard',
     data () {
       return {
-        offers: []
+        offers: [],
+        sellingOffers: []
       }
     },
-    computed: {},
     created () {
       let url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=ETH&tsyms=USD'
       this.$http.get(url).then(response => {
@@ -45,6 +47,12 @@
       Payment.init().then(() => {
         this.getNumberOfOffers().then(count => {
           this.getAllOffers(count.toNumber())
+          Payment.getIndexesOfSellingOffers().then(indexes => {
+            let self = this
+            indexes.forEach(function (index) {
+              self.sellingOffers.push(index.toNumber())
+            })
+          }, err => console.log(err))
         })
       })
     },
@@ -70,7 +78,6 @@
           })
         }
       }
-
     }
   }
 </script>

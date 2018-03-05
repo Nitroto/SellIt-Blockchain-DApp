@@ -169,9 +169,11 @@ contract SellItPayment is Owned {
     OfferShipped(msg.sender, offerIndex);
   }
 
-  // Only seller can get shipment address
-  function GetShipmentAddress(uint offerIndex) public view existing(offerIndex) isSeller(offerIndex) returns (string) {
-    return offers[offerIndex].addressForShipment;
+  // Only seller and buyer can get shipment address
+  function GetShipmentAddress(uint offerIndex) public view existing(offerIndex) returns (string) {
+    Offer storage offer = offers[offerIndex];
+    require(msg.sender == offer.seller || msg.sender == offer.buyer);
+    return offer.addressForShipment;
   }
 
   // Only seller and buyer can see offer status

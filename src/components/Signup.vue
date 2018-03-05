@@ -1,21 +1,26 @@
 <template>
   <section id='signup'>
     <h1>Sign up</h1>
-    <div class="w-75 p-3 mb-1 center">
-      <b-form @submit="signup">
-        <b-form-group id="signup" label="Username">
-          <b-form-input id="username"
-                        type="text"
-                        v-model="form.pseudo"
-                        required
-                        placeholder="Enter your username">
-          </b-form-input>
-        </b-form-group>
+    <b-row align-h="center">
+      <b-col cols="8" align-self="center">
+        <div class="w-75 p-3 mb-1 center">
+          <b-form @submit="signup">
+            <b-form-group id="signup" label="Username">
+              <b-form-input id="username"
+                            type="text"
+                            v-model="form.pseudo"
+                            required
+                            placeholder="Enter your username">
+              </b-form-input>
+            </b-form-group>
 
-        <b-button type="submit" variant="outline-success">Sign Up</b-button>
+            <b-button type="submit" block variant="outline-success">Sign Up</b-button>
 
-      </b-form>
-    </div>
+          </b-form>
+        </div>
+      </b-col>
+    </b-row>
+
   </section>
 </template>
 

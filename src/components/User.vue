@@ -50,7 +50,7 @@
 
     <b-row>
       <b-col>
-        <p>Purchases</p>
+        <p v-if="buying.length > 0">Purchases</p>
         <div v-for="(offer, index) in buying" :key="index">
           <b-card border-variant="warning"
                   :header="offer[1]"
@@ -62,15 +62,23 @@
               <p><strong>Price:</strong> {{ offer[3] | currency('wei', 0, { symbolOnLeft: false,
                 spaceBetweenAmountAndSymbol: true }) }}</p>
               <p>&asymp; {{ convertToUSD(convertToEth(offer[3],'wei')) | currency('$', 2) }}</p>
+
             </div>
-            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="danger">Cancel</b-btn>
-            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="success">Confirm</b-btn>
+            <b-button-group>
+              <b-btn @click="showModal(offer[0])" variant="info">Address</b-btn>
+              <b-btn @click="confirmOffer(offer[0].toNumber())" variant="success" :disabled="offer[6] || offer[7]">
+                Confirm
+              </b-btn>
+              <b-btn @click="cancelByBuyer(offer[0].toNumber())" variant="danger"
+                     :disabled="offer[5] || offer[6] || offer[7]">Cancel
+              </b-btn>
+            </b-button-group>
           </b-card>
           <br/>
         </div>
       </b-col>
       <b-col>
-        <p>Sales</p>
+        <p v-if="selling.length > 0">Sales</p>
         <div v-for="(offer, index) in selling" :key="index">
           <b-card border-variant="info"
                   :header="offer[1]"
@@ -83,18 +91,32 @@
                 spaceBetweenAmountAndSymbol: true }) }}</p>
               <p>&asymp; {{ convertToUSD(convertToEth(offer[3],'wei')) | currency('$', 2) }}</p>
             </div>
-            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="danger">Cancel</b-btn>
-            <b-btn v-b-modal.confirmModal @click="id = offer[0].toNumber()" variant="info">Shipped</b-btn>
+            <b-button-group>
+              <b-btn @click="showModal(offer[0])" variant="info" :disabled="!offer[4]">Address</b-btn>
+              <b-btn @click="shippedOffer(offer[0].toNumber())" variant="primary"
+                     :disabled="!offer[4] || offer[6] || offer[7]">Shipped
+              </b-btn>
+              <b-btn @click="cancelBySeller(offer[0].toNumber())" variant="danger"
+                     :disabled="offer[5] || offer[6] || offer[7]">
+                Cancel
+              </b-btn>
+            </b-button-group>
+
+
           </b-card>
           <br/>
         </div>
 
       </b-col>
     </b-row>
-    <p> TODO: All active offers for user sell or buy</p>
 
+    <b-modal ref="addressModal" hide-footer title="Delivery to">
+      <div class="d-block text-center">
+        <h3> {{ address }}</h3>
+      </div>
+      <b-btn class="mt-3" variant="outline-danger" block @click="hideModal">Close</b-btn>
+    </b-modal>
   </b-container>
-
 </template>
 
 <script>
@@ -114,7 +136,8 @@
         withdrawValue: 0,
         units: ['wei', 'gwei', 'finney', 'ether'],
         selling: [],
-        buying: []
+        buying: [],
+        address: ''
       }
     },
     created () {
@@ -203,7 +226,12 @@
         this.getIndexesSellingOffers().then(result => {
           result.forEach(function (index) {
             Payment.getOfferById(index.toNumber()).then(offer => {
-              self.selling.push(offer)
+              Payment.getOfferStatus(index.toNumber()).then(statuses => {
+                statuses.forEach(function (status) {
+                  offer.push(status)
+                })
+                self.selling.push(offer)
+              })
             }, err => {
               console.log(err)
             })
@@ -218,7 +246,12 @@
         this.getIndexeBuyingOffers().then(result => {
           result.forEach(function (index) {
             Payment.getOfferById(index.toNumber()).then(offer => {
-              self.buying.push(offer)
+              Payment.getOfferStatus(index.toNumber()).then(statuses => {
+                statuses.forEach(function (status) {
+                  offer.push(status)
+                })
+                self.buying.push(offer)
+              })
             }, err => {
               console.log(err)
             })
@@ -226,6 +259,51 @@
         }, err => {
           console.log(err)
         })
+      },
+
+      cancelByBuyer: function (id) {
+        Payment.cancelOfferAsBuyer(id).then(res => {
+          this.$toastr('warning', 'You cancel an offer.', 'Success')
+          console.log(res)
+        }, err => console.log(err))
+      },
+
+      cancelBySeller: function (id) {
+        Payment.cancelOfferAsSeller(id).then(res => {
+          this.$toastr('warning', 'You cancel an offer.', 'Success')
+          console.log(res)
+        }, err => console.log(err))
+      },
+
+      confirmOffer: function (id) {
+        Payment.confirmOffer(id).then(res => {
+          this.$toastr('success', 'You confirm an offer.', 'Success')
+          console.log(res)
+        }, err => console.log(err))
+      },
+
+      shippedOffer: function (id) {
+        Payment.confirmShipping(id).then(res => {
+          this.$toastr('success', 'You shipped an offer.', 'Success')
+          console.log(res)
+        }, err => console.log(err))
+      },
+
+      getShipmentAddress: function (id) {
+        Payment.getShipmentAddress(id).then(address => {
+        }, err => console.log(err))
+      },
+
+      showModal (id) {
+        Payment.getShipmentAddress(id).then(address => {
+          this.address = address.toString()
+          this.$refs.addressModal.show()
+        }, err => console.log(err))
+      },
+
+      hideModal () {
+        this.$refs.addressModal.hide()
+        this.address = ''
       }
     }
   }
