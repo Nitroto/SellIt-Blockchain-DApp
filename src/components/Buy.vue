@@ -26,6 +26,7 @@
     </div>
     <b-modal centered
              id="confirmModal"
+             ref="modal"
              title="Order information"
              :data="data"
              @ok="handleConfirm(id)"
@@ -33,8 +34,8 @@
       <form @submit.stop.prevent="handleConfirm">
         <p>Your deposit: {{ accountDeposit | currency('wei', 0, { symbolOnLeft: false,
           spaceBetweenAmountAndSymbol: true })}}</p>
-        <p>Offer price: {{ accountDeposit | currency('wei', 0, { symbolOnLeft: false,
-          spaceBetweenAmountAndSymbol: true })}}</p>
+        <!--<p>Offer price: {{ accountDeposit | currency('wei', 0, { symbolOnLeft: false,-->
+          <!--spaceBetweenAmountAndSymbol: true })}}</p>-->
         <label for="deposit-input">Sum to deposit in wei</label>
         <b-form-input id="deposit-input"
                       type="number"
@@ -125,7 +126,7 @@
       },
 
       buyNow: function (id) {
-        Payment.acceptOffer(id, this.deliveryAddress).then(tx => {
+        Payment.acceptOffer(id, this.deliveryAddress).then(() => {
           this.$toastr('success', 'You successfully pay for your purchase.', 'Success')
           this.$router.push('/user')
         }, err => {

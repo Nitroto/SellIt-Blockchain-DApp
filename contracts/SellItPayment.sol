@@ -78,7 +78,7 @@ contract SellItPayment is Owned {
   }
 
   // Withraw not blocked funds
-  function Withraw(uint amount) public {
+  function Withdraw(uint amount) public {
     require(withdrawableFunds[msg.sender] - amount >= 0);
     require(withdrawableFunds[msg.sender] - amount <= withdrawableFunds[msg.sender]);
     withdrawableFunds[msg.sender] -= amount;
@@ -204,7 +204,7 @@ contract SellItPayment is Owned {
     return blockedInContractEth[msg.sender];
   }
 
-  // User can check withdrawabl balances
+  // User can check withdrawable balances
   function GetDepositBalance() public view returns (uint) {
     return withdrawableFunds[msg.sender];
   }

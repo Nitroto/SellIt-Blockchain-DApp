@@ -23,10 +23,15 @@ const Payment = {
   },
 
   listenToEvents: function () {
-    // let self = this
-
-    return new Promise((resolve, reject) => {
-
+    this.instance.allEvents(
+      {},
+      {fromBlock: 0, toBLock: 'latest'}
+    ).watch(function (error, result) {
+      if (error) {
+        console.log(error)
+      } else {
+        console.log(result)
+      }
     })
   },
 
@@ -51,7 +56,7 @@ const Payment = {
     let self = this
 
     return new Promise((resolve, reject) => {
-      self.instance.Withraw(
+      self.instance.Withdraw(
         amountInWei,
         {from: window.web3.eth.accounts[0]}
       ).then(tx => {
